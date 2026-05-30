@@ -58,9 +58,10 @@ export function CustomerHeader() {
               <ShoppingCart />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Akun" asChild>
-            <Link href="/akun/profil">
+          <Button variant="outline" className="px-3" aria-label="Masuk akun" asChild>
+            <Link href="/masuk">
               <UserRound />
+              <span className="hidden sm:inline">Masuk</span>
             </Link>
           </Button>
         </div>

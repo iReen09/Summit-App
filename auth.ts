@@ -50,7 +50,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: "jwt",
   },
   pages: {
-    signIn: "/akun/profil",
+    signIn: "/masuk",
   },
   providers: [
     Credentials({
