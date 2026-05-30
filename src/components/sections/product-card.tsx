@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { PackageCheck, ShoppingCart, Star } from "lucide-react";
+import { ArrowRight, PackageCheck, Star } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,8 @@ export function ProductCard({ product }: { product: ProductCatalogItem }) {
   const discount = getDiscountPercent(product);
 
   return (
-    <Card className="group overflow-hidden">
-      <Link href={`/produk/${product.slug}`} className="relative block aspect-square overflow-hidden bg-secondary">
+    <Card className="group flex h-full flex-col overflow-hidden transition-colors hover:border-primary">
+      <Link href={`/produk/${product.slug}`} className="relative block aspect-[4/3] overflow-hidden bg-secondary">
         <Image
           src={product.images[0]}
           alt={product.name}
@@ -26,8 +26,8 @@ export function ProductCard({ product }: { product: ProductCatalogItem }) {
           <Badge variant={product.stock > 0 ? "secondary" : "destructive"}>{product.stock > 0 ? `${product.stock} stok` : "Habis"}</Badge>
         </div>
       </Link>
-      <CardContent className="grid gap-3 p-4">
-        <div className="min-h-24">
+      <CardContent className="flex flex-1 flex-col gap-3 p-4">
+        <div className="min-h-28">
           <div className="flex items-center justify-between gap-2">
             <div className="text-xs font-medium uppercase text-muted-foreground">{product.category}</div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -44,18 +44,22 @@ export function ProductCard({ product }: { product: ProductCatalogItem }) {
             <span>{product.sold} terjual</span>
           </div>
         </div>
-        <div className="flex items-end justify-between gap-3">
+        <div className="mt-auto flex min-h-12 items-end justify-between gap-3">
           <div>
             <div className="font-semibold">{formatRupiah(product.price)}</div>
-            {product.compareAt > product.price ? <div className="text-xs text-muted-foreground line-through">{formatRupiah(product.compareAt)}</div> : null}
+            <div className={product.compareAt > product.price ? "text-xs text-muted-foreground line-through" : "invisible text-xs"}>
+              {product.compareAt > product.price ? formatRupiah(product.compareAt) : "Harga pembanding"}
+            </div>
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <PackageCheck className="size-3.5" />
             {Math.round(product.weightGram / 100) / 10} kg
           </div>
         </div>
-        <Button variant="outline" disabled>
-          <ShoppingCart /> Add to Cart Sprint 4
+        <Button variant="outline" asChild>
+          <Link href={`/produk/${product.slug}`}>
+            Lihat detail <ArrowRight />
+          </Link>
         </Button>
       </CardContent>
     </Card>
