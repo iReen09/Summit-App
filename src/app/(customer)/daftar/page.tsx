@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { Apple, CheckCircle2, Mail, MapPinned, PackageCheck, ShieldCheck, Truck } from "lucide-react";
+import { CheckCircle2, MapPinned, PackageCheck, ShieldCheck, Truck } from "lucide-react";
 
 import { AuthPageShell } from "@/components/sections/auth-page-shell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { RegisterForm } from "@/components/sections/register-form";
+import { hasAppleOAuthEnv, hasGoogleOAuthEnv } from "@/lib/server/env";
 
 export const metadata = {
   title: "Daftar",
@@ -45,54 +43,7 @@ export default function RegisterPage() {
         <p className="mt-3 text-sm leading-6 text-muted-foreground">Akun baru disiapkan untuk profil, alamat utama, email verification, dan checkout Sprint 4.</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Button variant="outline" type="button">
-          <Mail /> Google
-        </Button>
-        <Button variant="outline" type="button">
-          <Apple /> Apple
-        </Button>
-      </div>
-
-      <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-        <Separator className="flex-1" />
-        atau daftar dengan email
-        <Separator className="flex-1" />
-      </div>
-
-      <form className="grid gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="name">Nama lengkap</Label>
-          <Input id="name" autoComplete="name" placeholder="Contoh: Dimas Pratama" />
-        </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" autoComplete="email" placeholder="nama@email.com" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="phone">Nomor HP</Label>
-            <Input id="phone" type="tel" autoComplete="tel" placeholder="08xxxxxxxxxx" />
-          </div>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" autoComplete="new-password" placeholder="Minimal 8 karakter" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="confirm-password">Konfirmasi password</Label>
-            <Input id="confirm-password" type="password" autoComplete="new-password" placeholder="Ulangi password" />
-          </div>
-        </div>
-        <label className="flex items-start gap-2 text-sm text-muted-foreground">
-          <input type="checkbox" className="mt-0.5 size-4 rounded border-input accent-primary" />
-          <span>Saya setuju menerima email verifikasi, status pesanan, dan informasi penting akun Summit Gear.</span>
-        </label>
-        <Button type="button" size="lg" className="w-full">
-          Daftar
-        </Button>
-      </form>
+      <RegisterForm googleEnabled={hasGoogleOAuthEnv()} appleEnabled={hasAppleOAuthEnv()} />
 
       <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
         {[

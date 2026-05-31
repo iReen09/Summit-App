@@ -38,9 +38,9 @@ export function AccountShell({
           </div>
           <div className="grid gap-3 sm:grid-cols-3 lg:w-[430px]">
             {[
-              { label: "Profil", value: "80%" },
-              { label: "Alamat", value: "2" },
-              { label: "Session", value: "Ready" },
+              { label: "Profil", value: "API" },
+              { label: "Alamat", value: "CRUD" },
+              { label: "Session", value: "Aktif" },
             ].map((item) => (
               <div key={item.label} className="rounded-md border border-white/20 bg-white/10 p-3 backdrop-blur">
                 <div className="text-xl font-semibold">{item.value}</div>
@@ -52,7 +52,7 @@ export function AccountShell({
         <div className="flex flex-col gap-3 border-t border-white/15 bg-primary-foreground/8 px-5 py-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="flex items-center gap-2 text-primary-foreground/80">
             <CheckCircle2 className="size-4 text-accent" />
-            Sprint 2 siap untuk kontrak FE sebelum API terhubung.
+            Sprint 2 account sudah memakai session dan API backend.
           </div>
           <Link href="/" className="inline-flex items-center gap-2 font-medium text-primary-foreground hover:underline">
             <Home className="size-4" />
@@ -70,7 +70,7 @@ export function AccountShell({
                   <ShieldCheck className="size-4 text-primary" />
                   Sprint 2 Account
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">UI auth, profil, alamat, dan session readiness.</p>
+                <p className="mt-1 text-xs text-muted-foreground">Auth, profil, dan alamat sudah terhubung ke backend account.</p>
               </div>
               <nav className="flex gap-1 overflow-x-auto lg:grid lg:overflow-visible">
                 {accountNav.map((item) => {

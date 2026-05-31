@@ -44,7 +44,17 @@ async function countFoundationTables() {
   });
 
   await client.connect();
-  const tables = ["Role", "Permission", "Category", "Brand", "Product", "ProductVariant", "Banner"];
+  const tables = [
+    "Role",
+    "Permission",
+    "Category",
+    "Brand",
+    "Product",
+    "ProductVariant",
+    "Banner",
+    "EmailVerificationToken",
+    "PasswordResetToken",
+  ];
   const counts = {};
 
   for (const table of tables) {

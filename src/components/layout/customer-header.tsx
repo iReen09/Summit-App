@@ -2,14 +2,24 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, Search, ShoppingCart, UserRound } from "lucide-react";
+import { LogOut, Menu, Search, Settings, ShoppingCart, UserRound } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { customerNav } from "@/lib/constants";
 
-export function CustomerHeader() {
+export function CustomerHeader({
+  user,
+}: {
+  user?: {
+    name: string | null;
+    email: string | null;
+    isAdmin: boolean;
+  } | null;
+}) {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
       <div className="container-page flex h-16 items-center gap-3">
@@ -59,12 +69,49 @@ export function CustomerHeader() {
               <ShoppingCart />
             </Link>
           </Button>
-          <Button variant="outline" className="px-3" aria-label="Masuk akun" asChild>
-            <Link href="/masuk">
-              <UserRound />
-              <span className="hidden sm:inline">Masuk</span>
-            </Link>
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="px-3" aria-label="Menu akun">
+                  <UserRound />
+                  <span className="hidden sm:inline">{user.name || "Akun"}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5">
+                  <div className="truncate text-sm font-medium">{user.name || "Summit Customer"}</div>
+                  <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/akun/profil">
+                    <UserRound className="size-4" />
+                    Profil
+                  </Link>
+                </DropdownMenuItem>
+                {user.isAdmin ? (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">
+                      <Settings className="size-4" />
+                      Admin
+                    </Link>
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => signOut({ redirectTo: "/" })}>
+                  <LogOut className="size-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="outline" className="px-3" aria-label="Masuk akun" asChild>
+              <Link href="/masuk">
+                <UserRound />
+                <span className="hidden sm:inline">Masuk</span>
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>

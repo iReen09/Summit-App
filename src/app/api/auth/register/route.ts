@@ -10,7 +10,10 @@ export async function POST(request: Request) {
       return fail(409, result.code, result.message);
     }
 
-    return created(result.user);
+    return created({
+      ...result.user,
+      message: "Registrasi berhasil. Silakan cek email untuk verifikasi akun.",
+    });
   } catch (error) {
     return handleRouteError(error);
   }

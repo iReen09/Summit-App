@@ -1,17 +1,33 @@
 import { AlertTriangle, Package, ShoppingBag, TrendingUp } from "lucide-react";
+import { redirect } from "next/navigation";
 
 import { AdminPageHeader } from "@/components/sections/admin-page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { foundationModules } from "@/lib/constants";
+import { auth } from "@/lib/auth";
+import { getAdminSummary } from "@/lib/server/admin-service";
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+  const session = await auth();
+
+  if (!session?.user?.isAdmin) {
+    redirect("/masuk?callbackUrl=/admin");
+  }
+
+  const summary = await getAdminSummary();
+  const modules = [
+    { label: "Produk", value: summary.products.toLocaleString("id-ID"), note: `${summary.activeProducts} aktif`, icon: Package },
+    { label: "Order aktif", value: summary.pendingOrders.toLocaleString("id-ID"), note: "Menunggu fulfillment", icon: ShoppingBag },
+    { label: "Customer", value: summary.users.toLocaleString("id-ID"), note: "Akun terdaftar", icon: TrendingUp },
+    { label: "Voucher aktif", value: summary.activeVouchers.toLocaleString("id-ID"), note: "Promo berjalan", icon: AlertTriangle },
+  ];
+
   return (
     <div>
       <AdminPageHeader title="Dashboard Utama" description="Ringkasan foundation backoffice untuk sales, order aktif, produk terlaris, revenue bulanan, dan low stock." />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {foundationModules.map((item) => (
+        {modules.map((item) => (
           <Card key={item.label}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{item.label}</CardTitle>
@@ -19,7 +35,7 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-semibold">{item.value}</div>
-              <p className="mt-1 text-xs text-muted-foreground">Placeholder Sprint 1</p>
+              <p className="mt-1 text-xs text-muted-foreground">{item.note}</p>
             </CardContent>
           </Card>
         ))}
@@ -43,8 +59,8 @@ export default function AdminDashboardPage() {
               </TableHeader>
               <TableBody>
                 {[
-                  ["Auth & Account", "Belum aktif", "Sprint 2"],
-                  ["Catalog Query", "Belum aktif", "Sprint 3"],
+                  ["Auth & Account", "Aktif", "Sprint 2"],
+                  ["Catalog Query", "Aktif", "Sprint 1"],
                   ["Cart & Checkout", "Belum aktif", "Sprint 4"],
                   ["Payment & Order", "Belum aktif", "Sprint 5"],
                 ].map(([module, status, sprint]) => (
@@ -66,7 +82,7 @@ export default function AdminDashboardPage() {
                 <AlertTriangle className="size-4 text-accent" /> Low Stock
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">Stock alert default &lt; 10 unit sudah tercermin di schema dan akan aktif saat CRUD inventory masuk.</CardContent>
+            <CardContent className="text-sm text-muted-foreground">{summary.lowStockVariants} varian berada di bawah threshold 10 unit.</CardContent>
           </Card>
           <Card>
             <CardHeader>

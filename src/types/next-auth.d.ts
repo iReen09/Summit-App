@@ -7,6 +7,7 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      emailVerified?: Date | null;
       isAdmin: boolean;
       roles: string[];
       permissions: string[];
@@ -14,6 +15,7 @@ declare module "next-auth" {
   }
 
   interface User {
+    emailVerified?: Date | null;
     isAdmin?: boolean;
     roles?: string[];
     permissions?: string[];

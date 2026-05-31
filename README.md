@@ -53,6 +53,10 @@ Public:
 - `GET /api/brands`
 - `GET /api/banners`
 - `POST /api/auth/register`
+- `POST /api/auth/verify-email`
+- `POST /api/auth/forgot-password`
+- `POST /api/auth/reset-password`
+- `POST /api/auth/resend-verification`
 
 Authenticated customer:
 
@@ -66,6 +70,13 @@ Authenticated customer:
 Admin:
 
 - `GET /api/admin/summary`
+
+Sprint 2 auth/account behavior:
+
+- Credentials login requires `emailVerified` to be set.
+- Google and Apple OAuth providers are enabled only when their env credentials are present.
+- Brevo is used for email verification and reset password delivery when `BREVO_API_KEY` and `EMAIL_FROM` are configured.
+- In development, missing Brevo credentials skip email delivery with a server warning; production must provide them.
 
 ## Verified Routes
 

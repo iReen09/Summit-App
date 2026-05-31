@@ -1,17 +1,22 @@
 import Link from "next/link";
-import { Apple, KeyRound, Mail, MapPin, Mountain, PackageCheck, ShieldCheck } from "lucide-react";
+import { KeyRound, MapPin, Mountain, PackageCheck, ShieldCheck } from "lucide-react";
 
 import { AuthPageShell } from "@/components/sections/auth-page-shell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { LoginForm } from "@/components/sections/login-form";
+import { hasAppleOAuthEnv, hasGoogleOAuthEnv } from "@/lib/server/env";
 
 export const metadata = {
   title: "Masuk",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const params = await searchParams;
+  const callbackUrl = params.callbackUrl?.startsWith("/") ? params.callbackUrl : "/akun/profil";
+
   return (
     <AuthPageShell
       badge="Login Customer"
@@ -39,43 +44,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Button variant="outline" type="button">
-          <Mail /> Google
-        </Button>
-        <Button variant="outline" type="button">
-          <Apple /> Apple
-        </Button>
-      </div>
-
-      <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-        <Separator className="flex-1" />
-        atau masuk dengan email
-        <Separator className="flex-1" />
-      </div>
-
-      <form className="grid gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" autoComplete="email" placeholder="nama@email.com" />
-        </div>
-        <div className="grid gap-2">
-          <div className="flex items-center justify-between gap-3">
-            <Label htmlFor="password">Password</Label>
-            <Link href="/lupa-password" className="text-sm font-medium text-primary hover:underline">
-              Lupa password?
-            </Link>
-          </div>
-          <Input id="password" type="password" autoComplete="current-password" placeholder="Minimal 8 karakter" />
-        </div>
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          <input type="checkbox" className="size-4 rounded border-input accent-primary" />
-          Ingat sesi masuk di perangkat ini
-        </label>
-        <Button type="button" size="lg" className="w-full">
-          Masuk
-        </Button>
-      </form>
+      <LoginForm callbackUrl={callbackUrl} googleEnabled={hasGoogleOAuthEnv()} appleEnabled={hasAppleOAuthEnv()} />
 
       <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
         {[

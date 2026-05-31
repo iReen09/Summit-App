@@ -2,9 +2,7 @@ import Link from "next/link";
 import { KeyRound, MailCheck, ShieldCheck } from "lucide-react";
 
 import { AuthPageShell } from "@/components/sections/auth-page-shell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { ForgotPasswordForm } from "@/components/sections/forgot-password-form";
 
 export const metadata = {
   title: "Lupa Password",
@@ -25,15 +23,7 @@ export default function ForgotPasswordPage() {
         </>
       }
     >
-      <form className="grid gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email akun</Label>
-          <Input id="email" type="email" autoComplete="email" placeholder="nama@email.com" />
-        </div>
-        <Button type="button" size="lg" className="w-full">
-          Kirim link reset
-        </Button>
-      </form>
+      <ForgotPasswordForm />
 
       <div className="mt-6 grid gap-3">
         {[

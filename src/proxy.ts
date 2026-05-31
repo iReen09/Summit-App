@@ -1,15 +1,26 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-export function proxy(request: NextRequest) {
-  const response = NextResponse.next();
+import { auth } from "@/lib/auth";
 
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    response.headers.set("x-summit-admin-protection", "scaffold");
+export const proxy = auth((request) => {
+  const session = request.auth;
+  const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith("/akun") && !session?.user) {
+    const loginUrl = new URL("/masuk", request.nextUrl);
+    loginUrl.searchParams.set("callbackUrl", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(loginUrl);
   }
 
-  return response;
-}
+  if (pathname.startsWith("/admin") && !session?.user?.isAdmin) {
+    const loginUrl = new URL("/masuk", request.nextUrl);
+    loginUrl.searchParams.set("callbackUrl", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.next();
+});
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/akun/:path*", "/admin/:path*"],
 };

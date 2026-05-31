@@ -58,7 +58,7 @@ export const categoryCatalog: CategoryItem[] = [
     name: "Sepatu",
     slug: "sepatu",
     description: "Footwear dengan traksi stabil untuk jalur basah, berbatu, dan berlumpur.",
-    image: "https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?auto=format&fit=crop&w=900&q=80",
+    image: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?auto=format&fit=crop&w=900&q=80",
     highlight: "Grip basah",
   },
   {
@@ -266,7 +266,7 @@ export const catalogProducts: ProductCatalogItem[] = [
     sold: 88,
     weightGram: 780,
     images: [
-      "https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=1200&q=80",
     ],
