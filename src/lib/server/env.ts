@@ -7,6 +7,9 @@ const requiredProductionEnv = [
   "AUTH_APPLE_SECRET",
   "BREVO_API_KEY",
   "EMAIL_FROM",
+  "MIDTRANS_SERVER_KEY",
+  "MIDTRANS_CLIENT_KEY",
+  "MIDTRANS_IS_PRODUCTION",
 ] as const;
 
 export function getAppUrl() {
@@ -37,4 +40,12 @@ export function hasAppleOAuthEnv() {
 
 export function hasBrevoEnv() {
   return hasEnv("BREVO_API_KEY") && hasEnv("EMAIL_FROM");
+}
+
+export function hasMidtransEnv() {
+  return hasEnv("MIDTRANS_SERVER_KEY") && hasEnv("MIDTRANS_CLIENT_KEY");
+}
+
+export function isMidtransProduction() {
+  return process.env.MIDTRANS_IS_PRODUCTION === "true";
 }

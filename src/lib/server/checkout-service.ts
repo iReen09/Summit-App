@@ -4,6 +4,8 @@ import { PaymentMethod, Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { getCartForCheckout, serializeCart } from "@/lib/server/cart-service";
 import { ApiError } from "@/lib/server/http";
+import { sendOrderCreatedSideEffects } from "@/lib/server/order-service";
+import { createMidtransSnapTransaction } from "@/lib/server/payment-service";
 import { estimateShipping, getShippingServiceById } from "@/lib/server/shipping-service";
 import { calculateVoucherDiscount, validateVoucher } from "@/lib/server/voucher-service";
 
@@ -102,7 +104,7 @@ export async function createCheckoutOrder(userId: string, input: z.infer<typeof 
     }
   }
 
-  return prisma.$transaction(async (tx) => {
+  const orderWithRelations = await prisma.$transaction(async (tx) => {
     const cart = await getCartForCheckout(userId, tx);
     const orderNumber = await createUniqueOrderNumber(tx);
     const expiresAt = paymentExpiry(input.paymentMethod);
@@ -194,6 +196,7 @@ export async function createCheckoutOrder(userId: string, input: z.infer<typeof 
     const orderWithRelations = await tx.order.findUniqueOrThrow({
       where: { id: order.id },
       include: {
+        user: true,
         items: {
           include: {
             product: true,
@@ -206,44 +209,72 @@ export async function createCheckoutOrder(userId: string, input: z.infer<typeof 
       },
     });
 
-    return {
-      id: orderWithRelations.id,
-      orderNumber: orderWithRelations.orderNumber,
-      status: orderWithRelations.status,
-      paymentMethod: orderWithRelations.paymentMethod,
-      subtotal: Number(orderWithRelations.subtotal),
-      shippingCost: Number(orderWithRelations.shippingCost),
-      discount,
-      total: Number(orderWithRelations.total),
-      expiresAt: orderWithRelations.expiresAt,
-      addressSnapshot: orderWithRelations.addressSnapshot,
-      shipment: orderWithRelations.shipment,
-      payment: orderWithRelations.payment
-        ? {
-            id: orderWithRelations.payment.id,
-            method: orderWithRelations.payment.method,
-            status: orderWithRelations.payment.status,
-            amount: Number(orderWithRelations.payment.amount),
-            midtransOrderId: orderWithRelations.payment.midtransOrderId,
-            expiredAt: orderWithRelations.payment.expiredAt,
-          }
-        : null,
-      voucher: orderWithRelations.voucher
-        ? {
-            code: orderWithRelations.voucher.code,
-            type: orderWithRelations.voucher.type,
-          }
-        : null,
-      items: orderWithRelations.items.map((item) => ({
-        id: item.id,
-        productId: item.productId,
-        variantId: item.variantId,
-        productName: item.product.name,
-        sku: item.variant?.sku ?? null,
-        quantity: item.quantity,
-        unitPrice: Number(item.unitPrice),
-        subtotal: Number(item.subtotal),
-      })),
-    };
+    return orderWithRelations;
   });
+
+  let snap: Awaited<ReturnType<typeof createMidtransSnapTransaction>> | null = null;
+
+  if (orderWithRelations.paymentMethod !== "COD") {
+    snap = await createMidtransSnapTransaction(orderWithRelations);
+  }
+
+  const payment = snap
+    ? await prisma.payment.update({
+        where: { orderId: orderWithRelations.id },
+        data: {
+          snapToken: snap.token,
+          redirectUrl: snap.redirect_url,
+          midtransOrderId: orderWithRelations.orderNumber,
+        },
+      })
+    : orderWithRelations.payment;
+
+  await sendOrderCreatedSideEffects(orderWithRelations).catch((error) => {
+    console.warn("[order:side-effects-failed]", error);
+  });
+
+  return {
+    id: orderWithRelations.id,
+    orderNumber: orderWithRelations.orderNumber,
+    status: orderWithRelations.status,
+    paymentMethod: orderWithRelations.paymentMethod,
+    subtotal: Number(orderWithRelations.subtotal),
+    shippingCost: Number(orderWithRelations.shippingCost),
+    discount,
+    total: Number(orderWithRelations.total),
+    expiresAt: orderWithRelations.expiresAt,
+    addressSnapshot: orderWithRelations.addressSnapshot,
+    shipment: orderWithRelations.shipment,
+    payment: payment
+      ? {
+          id: payment.id,
+          method: payment.method,
+          status: payment.status,
+          amount: Number(payment.amount),
+          midtransOrderId: payment.midtransOrderId,
+          midtransTransactionId: payment.midtransTransactionId,
+          snapToken: payment.snapToken,
+          redirectUrl: payment.redirectUrl,
+          paymentType: payment.paymentType,
+          fraudStatus: payment.fraudStatus,
+          expiredAt: payment.expiredAt,
+        }
+      : null,
+    voucher: orderWithRelations.voucher
+      ? {
+          code: orderWithRelations.voucher.code,
+          type: orderWithRelations.voucher.type,
+        }
+      : null,
+    items: orderWithRelations.items.map((item) => ({
+      id: item.id,
+      productId: item.productId,
+      variantId: item.variantId,
+      productName: item.product.name,
+      sku: item.variant?.sku ?? null,
+      quantity: item.quantity,
+      unitPrice: Number(item.unitPrice),
+      subtotal: Number(item.subtotal),
+    })),
+  };
 }

@@ -109,3 +109,37 @@ export async function sendPasswordResetEmail(input: { email: string; name?: stri
     tags: ["summit-gear", "password-reset"],
   });
 }
+
+export async function sendOrderCreatedEmail(input: { email: string; name?: string | null; orderNumber: string; orderUrl: string; total: number }) {
+  return sendTransactionalEmail({
+    to: {
+      email: input.email,
+      name: input.name,
+    },
+    subject: `Order ${input.orderNumber} berhasil dibuat`,
+    htmlContent: `
+      <p>Halo ${input.name ?? "Pendaki"},</p>
+      <p>Order <strong>${input.orderNumber}</strong> berhasil dibuat dengan total Rp${input.total.toLocaleString("id-ID")}.</p>
+      <p><a href="${input.orderUrl}">Lihat detail order</a></p>
+    `,
+    textContent: `Order ${input.orderNumber} berhasil dibuat. Detail: ${input.orderUrl}`,
+    tags: ["summit-gear", "order-created"],
+  });
+}
+
+export async function sendPaymentPaidEmail(input: { email: string; name?: string | null; orderNumber: string; orderUrl: string; total: number }) {
+  return sendTransactionalEmail({
+    to: {
+      email: input.email,
+      name: input.name,
+    },
+    subject: `Pembayaran ${input.orderNumber} berhasil`,
+    htmlContent: `
+      <p>Halo ${input.name ?? "Pendaki"},</p>
+      <p>Pembayaran untuk order <strong>${input.orderNumber}</strong> sebesar Rp${input.total.toLocaleString("id-ID")} sudah tercatat.</p>
+      <p><a href="${input.orderUrl}">Pantau pesanan</a></p>
+    `,
+    textContent: `Pembayaran order ${input.orderNumber} berhasil. Detail: ${input.orderUrl}`,
+    tags: ["summit-gear", "payment-paid"],
+  });
+}
