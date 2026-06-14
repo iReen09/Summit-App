@@ -192,7 +192,7 @@ export function CheckoutPageClient() {
             <Badge variant="accent">Order Dibuat</Badge>
             <h1 className="mt-4 text-3xl font-semibold tracking-normal sm:text-5xl">Checkout berhasil</h1>
             <p className="mt-3 max-w-2xl text-sm text-primary-foreground/80 sm:text-base">
-              Order non-payment Sprint 4 sudah dibuat. Status pembayaran real dan instruksi Midtrans tetap masuk Sprint 5.
+              Order tersimpan di backend. Pembayaran non-COD dapat dilanjutkan melalui transaksi Midtrans yang dibuat untuk order ini.
             </p>
           </div>
           <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -230,7 +230,15 @@ export function CheckoutPageClient() {
                   <div className="text-sm text-muted-foreground">Total</div>
                   <div className="mt-1 text-2xl font-semibold">{formatRupiah(createdOrder.total)}</div>
                 </div>
-                <Button asChild>
+                {createdOrder.payment?.redirectUrl ? (
+                  <Button asChild>
+                    <a href={createdOrder.payment.redirectUrl}>Bayar melalui Midtrans</a>
+                  </Button>
+                ) : null}
+                <Button variant="outline" asChild>
+                  <Link href={`/akun/pesanan/${createdOrder.orderNumber}`}>Lihat detail pesanan</Link>
+                </Button>
+                <Button variant="ghost" asChild>
                   <Link href="/produk">Belanja lagi</Link>
                 </Button>
               </CardContent>
@@ -279,7 +287,7 @@ export function CheckoutPageClient() {
     <div className="container-page py-8">
       <section className="summit-dark relative mb-6 overflow-hidden rounded-xl border border-white/10 p-5 sm:p-6">
         <DesignParticles />
-        <Badge variant="accent">Sprint 4 Checkout</Badge>
+        <Badge variant="accent">Checkout Terintegrasi</Badge>
         <div className="relative mt-3 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <h1 className="text-3xl font-medium tracking-[-0.03em] sm:text-5xl">Checkout Pendakian</h1>
@@ -289,7 +297,7 @@ export function CheckoutPageClient() {
           </div>
           <div className="w-fit rounded-full border border-white/20 bg-white/12 px-4 py-2 text-sm">
             <Clock className="mr-2 inline size-4 text-accent" />
-            Payment real masuk Sprint 5
+            Payment backend aktif
           </div>
         </div>
       </section>
@@ -366,7 +374,7 @@ export function CheckoutPageClient() {
                   {creatingOrder ? <Loader2 className="animate-spin" /> : <ArrowRight />}
                   Buat order
                 </Button>
-                <p className="text-xs text-muted-foreground">Order dibuat di backend; pembayaran real dan webhook tetap Sprint 5.</p>
+                <p className="text-xs text-muted-foreground">Order, reserved stock, dan transaksi pembayaran dibuat oleh backend.</p>
               </div>
             }
           />

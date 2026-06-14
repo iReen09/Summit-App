@@ -1,9 +1,16 @@
 import { CheckCircle2, Circle, Clock } from "lucide-react";
 
-import { type OrderTimelineItemMock } from "@/lib/order-mock";
 import { cn } from "@/lib/utils";
 
-export function OrderTimeline({ items }: { items: OrderTimelineItemMock[] }) {
+export type OrderTimelineItem = {
+  label: string;
+  description: string;
+  date: string;
+  complete: boolean;
+  current?: boolean;
+};
+
+export function OrderTimeline({ items }: { items: OrderTimelineItem[] }) {
   return (
     <div className="grid gap-0">
       {items.map((item, index) => {

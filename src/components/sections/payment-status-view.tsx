@@ -1,24 +1,67 @@
-import Link from "next/link";
-import { ArrowLeft, Clock, CreditCard, PackageCheck, QrCode, ReceiptText, ShieldCheck } from "lucide-react";
+"use client";
 
-import { OrderStatusBadge, PaymentStatusBadge } from "@/components/sections/order-status-badge";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Clock, CreditCard, ExternalLink, Loader2, PackageCheck, ReceiptText, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
+
 import { DesignParticles } from "@/components/sections/design-particles";
+import { OrderStatusBadge, PaymentStatusBadge } from "@/components/sections/order-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { type OrderMock } from "@/lib/order-mock";
+import { ApiRequestError, apiRequest } from "@/lib/api-client";
+import type { CustomerOrderResponse } from "@/lib/commerce-types";
 import { formatRupiah } from "@/lib/utils";
 
-export function PaymentStatusView({ order }: { order: OrderMock }) {
-  const isPending = order.paymentStatus === "PENDING";
+function formatDate(value: string | null | undefined) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+export function PaymentStatusView({ orderId }: { orderId: string }) {
+  const router = useRouter();
+  const [order, setOrder] = useState<CustomerOrderResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadOrder = useCallback(async () => {
+    try {
+      setOrder(await apiRequest<CustomerOrderResponse>(`/api/orders/${orderId}`));
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 401) {
+        router.push(`/masuk?callbackUrl=/pembayaran/${orderId}`);
+        return;
+      }
+      toast.error(error instanceof Error ? error.message : "Status pembayaran gagal dimuat.");
+    } finally {
+      setLoading(false);
+    }
+  }, [orderId, router]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadOrder();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadOrder]);
+
+  if (loading) {
+    return <div className="container-page grid min-h-72 place-items-center py-8"><Loader2 className="size-8 animate-spin text-primary" /></div>;
+  }
+
+  if (!order) {
+    return <div className="container-page py-8"><Card><CardContent className="p-6 text-center text-sm text-muted-foreground">Transaksi pembayaran tidak ditemukan.</CardContent></Card></div>;
+  }
+
+  const isPending = order.payment?.status === "PENDING";
 
   return (
     <div className="container-page py-8">
       <Button variant="ghost" asChild className="mb-4">
-        <Link href={`/akun/pesanan/${order.id}`}>
-          <ArrowLeft /> Detail pesanan
-        </Link>
+        <Link href={`/akun/pesanan/${order.orderNumber}`}><ArrowLeft /> Detail pesanan</Link>
       </Button>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -26,17 +69,15 @@ export function PaymentStatusView({ order }: { order: OrderMock }) {
           <div className="summit-dark relative overflow-hidden p-5 sm:p-7">
             <DesignParticles />
             <div className="relative">
-            <Badge variant="accent">Status Pembayaran</Badge>
-            <h1 className="mt-4 text-3xl font-medium tracking-[-0.03em] sm:text-5xl">
-              {isPending ? "Selesaikan pembayaran" : "Pembayaran tercatat"}
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-primary-foreground/80 sm:text-base">
-              Halaman ini menampilkan feedback payment Sprint 5. Status final tetap mengikuti validasi server dan webhook Midtrans sesuai PRD.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <OrderStatusBadge status={order.status} className="bg-white/15 text-primary-foreground" />
-              <PaymentStatusBadge status={order.paymentStatus} className="bg-white/15 text-primary-foreground" />
-            </div>
+              <Badge variant="accent">Status Pembayaran</Badge>
+              <h1 className="mt-4 text-3xl font-medium tracking-[-0.03em] sm:text-5xl">{isPending ? "Selesaikan pembayaran" : "Status pembayaran tercatat"}</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-primary-foreground/80 sm:text-base">
+                Status final dibaca dari backend dan hanya diperbarui melalui notification webhook Midtrans.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <OrderStatusBadge status={order.status} className="bg-white/15 text-primary-foreground" />
+                {order.payment ? <PaymentStatusBadge status={order.payment.status} className="bg-white/15 text-primary-foreground" /> : null}
+              </div>
             </div>
           </div>
 
@@ -45,11 +86,9 @@ export function PaymentStatusView({ order }: { order: OrderMock }) {
               <div className="rounded-xl border bg-secondary p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <div className="flex items-center gap-2 text-sm font-medium text-accent-foreground">
-                      <Clock className="size-4" /> Batas pembayaran
-                    </div>
-                    <div className="mt-2 text-3xl font-semibold">23:42:18</div>
-                    <p className="mt-1 text-sm text-muted-foreground">VA mock aktif sampai {order.expiresAt}. Countdown real akan mengikuti transaksi payment gateway.</p>
+                    <div className="flex items-center gap-2 text-sm font-medium"><Clock className="size-4" /> Batas pembayaran</div>
+                    <div className="mt-2 text-xl font-semibold">{formatDate(order.payment?.expiredAt ?? order.expiresAt)}</div>
+                    <p className="mt-1 text-sm text-muted-foreground">Selesaikan pembayaran sebelum transaksi kedaluwarsa.</p>
                   </div>
                   <div className="rounded-xl bg-background p-4 text-center">
                     <div className="text-xs text-muted-foreground">Total bayar</div>
@@ -58,89 +97,47 @@ export function PaymentStatusView({ order }: { order: OrderMock }) {
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border bg-secondary p-5">
+              <div className="rounded-xl border bg-secondary p-5">
                 <div className="flex items-center gap-3">
-                  <div className="grid size-11 place-items-center rounded-full bg-emerald-500/15 text-emerald-700">
-                    <PackageCheck className="size-5" />
-                  </div>
+                  <PackageCheck className="size-6 text-primary" />
                   <div>
-                    <div className="font-semibold">Pembayaran {order.paidAt ? `pada ${order.paidAt}` : "tercatat"}</div>
-                    <div className="text-sm text-muted-foreground">Order bisa dilanjutkan ke proses fulfillment.</div>
+                    <div className="font-semibold">Pembayaran {order.payment?.status ?? "tidak tersedia"}</div>
+                    <div className="text-sm text-muted-foreground">{order.payment?.paidAt ? `Tercatat ${formatDate(order.payment.paidAt)}` : "Perubahan status mengikuti backend."}</div>
                   </div>
                 </div>
               </div>
             )}
 
-            <Card className="rounded-[1.25rem]">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  {order.paymentMethod.id === "qris" ? <QrCode className="size-5 text-primary" /> : <CreditCard className="size-5 text-primary" />}
-                  Instruksi mock
-                </CardTitle>
-              </CardHeader>
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><CreditCard className="size-5 text-primary" /> Transaksi Midtrans</CardTitle></CardHeader>
               <CardContent className="grid gap-4 text-sm">
                 <div className="grid gap-3 rounded-lg bg-secondary p-4">
-                  <div className="flex justify-between gap-3">
-                    <span className="text-muted-foreground">Metode</span>
-                    <span className="font-medium">{order.paymentMethod.label}</span>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <span className="text-muted-foreground">Nomor VA / referensi</span>
-                    <span className="font-medium">8808 0526 0001</span>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <span className="text-muted-foreground">Order</span>
-                    <span className="font-medium">{order.orderNumber}</span>
-                  </div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">Metode</span><span className="font-medium">{order.paymentMethod}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">Payment type</span><span className="font-medium">{order.payment?.paymentType ?? "Menunggu Midtrans"}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">Order</span><span className="font-medium">{order.orderNumber}</span></div>
                 </div>
-                <div className="grid gap-2">
-                  {["Buka mobile banking, e-wallet, atau kanal pembayaran pilihan.", "Masukkan nomor referensi dan pastikan nominal sama dengan total.", "Setelah dibayar, status final akan disinkronkan dari backend payment webhook."].map((item, index) => (
-                    <div key={item} className="flex gap-3 rounded-lg border p-3">
-                      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{index + 1}</span>
-                      <span className="text-muted-foreground">{item}</span>
-                    </div>
-                  ))}
-                </div>
-                <Button disabled>{isPending ? "Bayar via Midtrans Mock" : "Pembayaran selesai"}</Button>
+                {isPending && order.payment?.redirectUrl ? (
+                  <Button asChild><a href={order.payment.redirectUrl}>Buka pembayaran Midtrans <ExternalLink /></a></Button>
+                ) : null}
+                <Button variant="outline" onClick={() => void loadOrder()}><Loader2 className={loading ? "animate-spin" : ""} /> Perbarui status</Button>
               </CardContent>
             </Card>
           </div>
         </div>
 
         <aside className="lg:sticky lg:top-20 lg:self-start">
-          <Card className="rounded-[1.25rem]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <ReceiptText className="size-5 text-primary" /> Ringkasan
-              </CardTitle>
-            </CardHeader>
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><ReceiptText className="size-5 text-primary" /> Ringkasan</CardTitle></CardHeader>
             <CardContent className="grid gap-3 text-sm">
-              <div className="flex justify-between gap-3">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-medium">{formatRupiah(order.subtotal)}</span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-muted-foreground">Ongkir</span>
-                <span className="font-medium">{formatRupiah(order.shippingCost)}</span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-muted-foreground">Diskon</span>
-                <span className="font-medium">{order.discount ? `-${formatRupiah(order.discount)}` : "-"}</span>
-              </div>
+              <div className="flex justify-between gap-3"><span className="text-muted-foreground">Subtotal</span><span className="font-medium">{formatRupiah(order.subtotal)}</span></div>
+              <div className="flex justify-between gap-3"><span className="text-muted-foreground">Ongkir</span><span className="font-medium">{formatRupiah(order.shippingCost)}</span></div>
+              <div className="flex justify-between gap-3"><span className="text-muted-foreground">Diskon</span><span className="font-medium">{order.discount ? `-${formatRupiah(order.discount)}` : "-"}</span></div>
               <Separator />
-              <div className="flex items-end justify-between gap-3">
-                <span className="text-muted-foreground">Total</span>
-                <span className="text-2xl font-semibold">{formatRupiah(order.total)}</span>
-              </div>
+              <div className="flex items-end justify-between gap-3"><span className="text-muted-foreground">Total</span><span className="text-2xl font-semibold">{formatRupiah(order.total)}</span></div>
               <div className="rounded-xl bg-[var(--green-house)] p-4 text-white">
-                <div className="flex gap-3">
-                  <ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" />
-                  <p className="text-xs leading-5 text-primary-foreground/82">UI ini sengaja tidak mengubah status order dari browser customer. Sumber final pembayaran tetap server.</p>
-                </div>
+                <div className="flex gap-3"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" /><p className="text-xs leading-5 text-primary-foreground/82">Browser tidak dapat menandai transaksi sebagai lunas. Webhook Midtrans menjadi sumber status final.</p></div>
               </div>
-              <Button variant="outline" asChild>
-                <Link href="/akun/pesanan">Lihat semua pesanan</Link>
-              </Button>
+              <Button variant="outline" asChild><Link href="/akun/pesanan">Lihat semua pesanan</Link></Button>
             </CardContent>
           </Card>
         </aside>

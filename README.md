@@ -1,137 +1,208 @@
 # Summit Gear
 
-Responsive web B2C e-commerce foundation for hiking gear, based on `PRD.md`.
+Panduan instalasi dan pengaturan project Summit Gear untuk lingkungan pengembangan lokal.
 
-## Sprint 1 Scope
+## Prasyarat
 
-- Next.js App Router, TypeScript, Tailwind CSS, shadcn-style UI primitives.
-- Customer and admin route shells.
-- Static foundation pages for catalog, cart, checkout, account, article, FAQ, and admin modules.
-- Prisma 7 PostgreSQL schema, config, generated client, and seed script.
-- Auth.js/NextAuth v5 scaffolding with Credentials, Google, Apple, Prisma adapter, JWT session claims, and RBAC helpers.
-- `/api/health` route.
+Pastikan perangkat sudah memiliki:
 
-Login/register UI, working account flows, catalog queries, cart logic, checkout, payment, shipping, and CRUD operations are intentionally deferred to later sprints.
+- [Git](https://git-scm.com/)
+- [Node.js](https://nodejs.org/) beserta npm
+- Database PostgreSQL, direkomendasikan menggunakan [Supabase](https://supabase.com/)
 
-## Local Commands
+Versi utama teknologi yang digunakan project ini:
+
+- Next.js 16
+- React 19
+- Prisma 7
+- PostgreSQL
+
+## 1. Clone Repository
 
 ```bash
+git clone <URL_REPOSITORY>
+cd SummitApp
+```
+
+Jika repository sudah tersedia secara lokal, masuk langsung ke direktori project.
+
+## 2. Instal Dependensi
+
+```bash
+npm install
+```
+
+Pada Windows PowerShell, gunakan `npm.cmd` jika eksekusi `npm.ps1` diblokir oleh execution policy:
+
+```powershell
 npm.cmd install
-npm.cmd run prisma:generate
-npm.cmd run lint
-npm.cmd run build
+```
+
+## 3. Konfigurasi Environment
+
+Salin file `.env.example` menjadi `.env`.
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Linux/macOS:
+
+```bash
+cp .env.example .env
+```
+
+Kemudian isi nilai pada `.env` sesuai layanan yang digunakan.
+
+### Variabel Wajib
+
+| Variabel | Kegunaan |
+| --- | --- |
+| `APP_URL` | URL aplikasi lokal, gunakan `http://localhost:3000`. |
+| `NODE_ENV` | Mode aplikasi, gunakan `development` untuk pengembangan lokal. |
+| `DATABASE_URL` | Koneksi database saat aplikasi berjalan. Untuk Supabase, gunakan transaction pooler port `6543`. |
+| `DIRECT_URL` | Koneksi database untuk migrasi dan seed. Untuk Supabase, gunakan session pooler atau koneksi langsung port `5432`. |
+| `AUTH_SECRET` | Secret aman untuk proses autentikasi. |
+| `AUTH_TRUST_HOST` | Gunakan `true` untuk mempercayai host aplikasi lokal. |
+
+Contoh konfigurasi koneksi Supabase:
+
+```env
+DATABASE_URL="postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+DIRECT_URL="postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres"
+```
+
+Jangan menyimpan kredensial asli ke Git. File `.env` sudah diabaikan melalui `.gitignore`.
+
+### Variabel Opsional
+
+Isi variabel berikut hanya jika fitur terkait akan digunakan:
+
+- `AUTH_GOOGLE_ID` dan `AUTH_GOOGLE_SECRET`: login Google.
+- `AUTH_APPLE_ID` dan `AUTH_APPLE_SECRET`: login Apple.
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dan `SUPABASE_SERVICE_ROLE_KEY`: integrasi Supabase.
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, dan `CLOUDINARY_API_SECRET`: penyimpanan gambar Cloudinary.
+- `BREVO_API_KEY`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, dan `EMAIL_FROM`: pengiriman email.
+- `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION`, dan `MIDTRANS_MOCK_ENABLED`: pembayaran Midtrans.
+- `RAJAONGKIR_API_KEY` dan `BINDERBYTE_API_KEY`: layanan pengiriman.
+- `NEXT_PUBLIC_GA_ID` dan `SENTRY_DSN`: analytics dan monitoring.
+
+## 4. Siapkan Database dengan Prisma
+
+Generate Prisma Client:
+
+```bash
+npm run prisma:generate
+```
+
+Terapkan migrasi database:
+
+```bash
+npm run prisma:migrate
+```
+
+Isi database dengan data awal:
+
+```bash
+npm run db:seed
+```
+
+Untuk membuka Prisma Studio:
+
+```bash
+npm run prisma:studio
+```
+
+Pada Windows PowerShell, ganti `npm` dengan `npm.cmd` untuk seluruh perintah di atas jika diperlukan.
+
+### Akun Admin Hasil Seed
+
+Setelah seed berhasil dijalankan, gunakan akun berikut:
+
+```text
+Email: admin@summitgear.local
+Password: Password123!
+```
+
+Akun ini hanya ditujukan untuk pengembangan lokal.
+
+## 5. Jalankan Development Server
+
+```bash
+npm run dev
+```
+
+Buka [http://localhost:3000](http://localhost:3000) di browser.
+
+## Perintah Project
+
+| Perintah | Kegunaan |
+| --- | --- |
+| `npm run dev` | Menjalankan development server. |
+| `npm run build` | Generate Prisma Client dan membuat production build. |
+| `npm run start` | Menjalankan production build. |
+| `npm run lint` | Menjalankan pemeriksaan ESLint. |
+| `npm run prisma:generate` | Generate Prisma Client. |
+| `npm run prisma:migrate` | Menjalankan migrasi Prisma untuk development. |
+| `npm run prisma:studio` | Membuka Prisma Studio. |
+| `npm run db:seed` | Mengisi database dengan data awal. |
+| `npm run verify:sprint3` | Menjalankan verifikasi backend Sprint 3. |
+| `npm run verify:sprint4` | Menjalankan verifikasi backend Sprint 4. |
+| `npm run verify:sprint5` | Menjalankan verifikasi backend Sprint 5. |
+
+Untuk memverifikasi project secara umum:
+
+```bash
+npm run lint
+npm run build
+```
+
+Untuk mencoba production build secara lokal:
+
+```bash
+npm run build
+npm run start
+```
+
+## Troubleshooting
+
+### `npm.ps1` tidak dapat dijalankan di Windows PowerShell
+
+Gunakan executable npm Windows secara langsung:
+
+```powershell
 npm.cmd run dev
 ```
 
-Use `npm.cmd` on Windows PowerShell because `npm.ps1` may be blocked by execution policy.
+### Prisma gagal terhubung ke database
 
-## Environment
+- Pastikan `DATABASE_URL` dan `DIRECT_URL` di `.env` sudah benar.
+- Pastikan password database dan region Supabase sesuai.
+- Gunakan `DIRECT_URL` port `5432` untuk migrasi dan seed.
+- Pastikan project Supabase aktif dan koneksi jaringan tidak diblokir.
 
-Copy `.env.example` to `.env` when real Supabase/PostgreSQL and provider credentials are available.
+### Prisma Client belum tersedia atau tidak sesuai schema
 
-Prisma generation and production build use safe placeholder database URLs through `scripts/prisma-generate.mjs`, so Sprint 1 can build without real Supabase credentials. Do not run migrations or seed against production until `DATABASE_URL` and `DIRECT_URL` are set intentionally.
-
-For Supabase:
-
-- Use `DATABASE_URL` for application runtime, preferably the Supabase pooler transaction-mode URL on port `6543`.
-- Use `DIRECT_URL` for Prisma migrations and seed, preferably the Supabase session-mode or direct connection URL on port `5432`.
-- After `.env` is filled, run:
+Jalankan ulang:
 
 ```bash
-npm.cmd run prisma:migrate -- --name init
-npm.cmd run db:seed
+npm run prisma:generate
 ```
 
-## Backend API
+### Data awal belum tersedia
 
-Public:
-
-- `GET /api/health`
-- `GET /api/products`
-- `GET /api/products/[slug]`
-- `GET /api/products/[slug]/related`
-- `GET /api/products/suggest`
-- `GET /api/categories`
-- `GET /api/brands`
-- `GET /api/banners`
-- `GET /api/home-feed`
-- `GET /api/gear-checklists`
-- `GET /api/gear-checklists/[slug]`
-- `GET /api/size-guides`
-- `GET /api/size-guides/[categorySlug]`
-- `POST /api/auth/register`
-- `POST /api/auth/verify-email`
-- `POST /api/auth/forgot-password`
-- `POST /api/auth/reset-password`
-- `POST /api/auth/resend-verification`
-
-Authenticated customer:
-
-- `GET /api/account/profile`
-- `PATCH /api/account/profile`
-- `GET /api/account/addresses`
-- `POST /api/account/addresses`
-- `PATCH /api/account/addresses/[id]`
-- `DELETE /api/account/addresses/[id]`
-- `GET /api/search-history`
-- `POST /api/search-history`
-- `DELETE /api/search-history`
-- `GET /api/cart`
-- `POST /api/cart`
-- `DELETE /api/cart`
-- `PATCH /api/cart/items/[id]`
-- `DELETE /api/cart/items/[id]`
-- `POST /api/checkout/shipping-rates`
-- `POST /api/checkout/voucher`
-- `POST /api/checkout/order`
-
-Admin:
-
-- `GET /api/admin/summary`
-
-Sprint 2 auth/account behavior:
-
-- Credentials login requires `emailVerified` to be set.
-- Google and Apple OAuth providers are enabled only when their env credentials are present.
-- Brevo is used for email verification and reset password delivery when `BREVO_API_KEY` and `EMAIL_FROM` are configured.
-- In development, missing Brevo credentials skip email delivery with a server warning; production must provide them.
-
-Sprint 3 catalog behavior:
-
-- Product list supports `q`, `category`, `brand`, `minPrice`, `maxPrice`, `minRating`, `discountOnly`, `inStockOnly`, `sort`, `page`, and `pageSize`.
-- Sort values are `newest`, `price_asc`, `price_desc`, `name_asc`, `best_selling`, and `rating_desc`.
-- Sitemap includes active product and category routes from the database.
-- Product detail pages include dynamic metadata and Product JSON-LD.
-- Search history is authenticated; size guides and gear checklists are public catalog support APIs.
-
-Sprint 3 verification:
+Pastikan migrasi berhasil, kemudian jalankan:
 
 ```bash
-npm.cmd run build
-npm.cmd run verify:sprint3
+npm run db:seed
 ```
 
-Sprint 4 cart/checkout behavior:
+### Port `3000` sedang digunakan
 
-- Cart is persisted per authenticated user and enforces variant stock limits.
-- Shipping rates are backend-calculated from cart weight and address province using a deterministic mock-rate table until RajaOngkir/BinderByte credentials are integrated.
-- Voucher validation supports fixed amount, percentage, and free-shipping vouchers with active dates, minimum spend, and quota checks.
-- Checkout order creation runs in a Prisma transaction, decrements variant stock, creates order items, payment placeholder, shipment placeholder, and clears the cart.
-- Midtrans payment creation is not active in Sprint 4; Sprint 4 stops at non-payment order creation readiness.
-
-Sprint 4 verification:
+Hentikan proses yang menggunakan port tersebut atau jalankan Next.js pada port lain:
 
 ```bash
-npm.cmd run build
-npm.cmd run verify:sprint4
+npm run dev -- --port 3001
 ```
-
-## Verified Routes
-
-- `/`
-- `/produk`
-- `/keranjang`
-- `/checkout`
-- `/admin`
-- `/admin/produk`
-- `/api/health`
